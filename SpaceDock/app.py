@@ -36,7 +36,7 @@ from .database import db
 from .helpers import is_admin, following_mod
 from .objects import User
 
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__, template_folder='../templates', static_folder='../frontend/build', static_url_path='/')
 # https://flask.palletsprojects.com/en/1.1.x/security/#set-cookie-options
 # Set 'Secure', 'HttpOnly' and 'SameSite' attributes for session and remember-me cookiesHTTPS
 app.config.update(
@@ -92,6 +92,17 @@ app.register_blueprint(admin)
 app.register_blueprint(mods)
 app.register_blueprint(lists)
 app.register_blueprint(api)
+
+# Serve the React SPA for all non-API routes
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if not path.startswith('api/') and not path.startswith('static/') and not path.startswith('admin'):
+        from flask import send_from_directory
+        return send_from_directory('../frontend/build', 'index.html')
+    # For API and admin routes, let Flask's routing handle them
+    from flask import abort
+    abort(404)
 
 try:
     locale.setlocale(locale.LC_ALL, 'en_US')

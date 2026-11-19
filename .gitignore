@@ -21,8 +21,10 @@ logging.ini
 content/
 .bash_history
 
+
 venv/
 build/
+dist/
 node_modules/
 .npm/
 .mypy_cache/

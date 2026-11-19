@@ -1,17 +1,29 @@
-{% extends "layout.html" %}
-{% block styles %}
-<link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
-{% endblock %}
-{% block body %}
-<div class="error-banner" style="background-image: url('/static/error_5XX.jpg')">
-    <div class="container">
-        <h4>{{ error.code }} {{ error.name }}</h4>
-        <h3>{{ error.description }}</h3>
-        <p>
-            <a href="/" class="btn btn-primary">Browse Mods</a>
-            <a href="mailto:{{ support_mail }}" class="btn btn-primary">Contact Support</a>
-        </p>
-    </div>
+<!DOCTYPE html>
+<html>
+<head><title>{{ error.code }} - Server Error</title></head>
+<body>
+{% if debug %}
+<h1>{{ error.code }} - Internal Server Error</h1>
+<p>{{ error.description if error else 'Something went wrong on our end.' }}</p>
+<div class="error-debug">
+  <h3>Debug Info</h3>
+  <pre>{{ error }}
+{% if error.__traceback__ %}
+Traceback: {{ error.__traceback__.tb_frame.f_code.co_filename }}:{{ error.__traceback__.tb_lineno }}
+{% endif %}
+Path: {{ request.path }}
+Method: {{ request.method }}
+User-Agent: {{ request.user_agent }}
+Timestamp: {{ now() }}</pre>
 </div>
-<p class="pull-right">Image credit: <a href="https://www.reddit.com/user/Calebm12">/u/Calebm12</a></p>
-{% endblock %}
+{% else %}
+<h1>Server Error</h1>
+<p>Something went wrong on our end. We've been notified.</p>
+<div class="error-code">
+  <p>Error code: <code>{{ error.code }}</code></p>
+  <p>If this problem persists, please contact us with this error code.</p>
+</div>
+{% endif %}
+<a href="/">Back to homepage</a>
+</body>
+</html>

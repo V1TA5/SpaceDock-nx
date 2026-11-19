@@ -112,7 +112,9 @@ def game_info(game: Game) -> Dict[str, Any]:
         "id": game.id,
         "name": game.name,
         "short": game.short,
-        "active": game.active
+        "active": game.active,
+        "thumbnail": game.thumbnail,
+        "version": game.versions[0].friendly_version if game.versions else None
     }
 
 

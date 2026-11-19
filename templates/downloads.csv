@@ -1,3 +1,1 @@
-"Date","Downloads","Mod Version"
-{% for s in stats %}"{{ s.created }}","{{ s.downloads }}","{{ s.version.friendly_version }}"
-{% endfor %}
+Mod,Downloads

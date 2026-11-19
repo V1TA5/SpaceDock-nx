@@ -113,54 +113,8 @@ def populate_database(num_users, mods_per_user_min, mods_per_user_max, versions_
                       followers_per_mod_min, followers_per_mod_max, num_blog_posts, seed, test):
     if test:
         _populate_test_data()
-        return
-
-def _populate_test_data():
-    from SpaceDock.objects import User, Publisher, Game, GameVersion
-    import bcrypt
-    hashed_pw = bcrypt.hashpw(b"development", bcrypt.gensalt())
-
-    # Create admin user if doesn't exist
-    if not User.query.filter(User.username.ilike("admin")).first():
-        admin = User(username="admin", email="admin@example.com",
-                     admin=True, public=True)
-        admin.password = hashed_pw.decode('utf-8')
-        db.add(admin)
-        db.commit()
-        site_logger.info('Created admin user')
-
-    # Create normal user if doesn't exist
-    if not User.query.filter(User.username.ilike("user")).first():
-        user = User(username="user", email="user@example.com",
-                    public=True)
-        user.password = hashed_pw.decode('utf-8')
-        db.add(user)
-        db.commit()
-        site_logger.info('Created normal user')
-
-    if not Publisher.query.first():
-        pub = Publisher(name='Squad')
-        db.add(pub)
-        db.commit()
-        site_logger.info('Created Squad publisher')
-
-    if not Game.query.first():
-        game = Game(name='Kerbal Space Program',
-                    publisher_id=1,
-                    short='kerbal-space-program')
-        game.active = True
-        db.add(game)
-        db.commit()
-        site_logger.info('Created KSP game')
-
-    if not GameVersion.query.first():
-        game_version = GameVersion(friendly_version='1.0',
-                                   game_id=1)
-        db.add(game_version)
-        db.commit()
-        site_logger.info('Created KSP version 1.0')
-    return
-    import random
+    else:
+        import random
     from faker import Faker
     from SpaceDock.objects import (User, Publisher, Game, GameVersion, Mod, ModVersion,
                                      ModCategory, GameModCategory, Featured, BlogPost, Following)
@@ -308,6 +262,52 @@ def _populate_test_data():
     db.add_all(posts)
     db.commit()
     site_logger.info(f'Created {num_blog_posts} blog posts')
+
+def _populate_test_data():
+    from SpaceDock.objects import User, Publisher, Game, GameVersion
+    import bcrypt
+    hashed_pw = bcrypt.hashpw(b"development", bcrypt.gensalt())
+
+    # Create admin user if doesn't exist
+    if not User.query.filter(User.username.ilike("admin")).first():
+        admin = User(username="admin", email="admin@example.com",
+                     admin=True, public=True)
+        admin.password = hashed_pw.decode('utf-8')
+        db.add(admin)
+        db.commit()
+        site_logger.info('Created admin user')
+
+    # Create normal user if doesn't exist
+    if not User.query.filter(User.username.ilike("user")).first():
+        user = User(username="user", email="user@example.com",
+                    public=True)
+        user.password = hashed_pw.decode('utf-8')
+        db.add(user)
+        db.commit()
+        site_logger.info('Created normal user')
+
+    if not Publisher.query.first():
+        pub = Publisher(name='Squad')
+        db.add(pub)
+        db.commit()
+        site_logger.info('Created Squad publisher')
+
+    if not Game.query.first():
+        game = Game(name='Kerbal Space Program',
+                    publisher_id=1,
+                    short='kerbal-space-program')
+        game.active = True
+        db.add(game)
+        db.commit()
+        site_logger.info('Created KSP game')
+
+    if not GameVersion.query.first():
+        game_version = GameVersion(friendly_version='1.0',
+                                   game_id=1)
+        db.add(game_version)
+        db.commit()
+        site_logger.info('Created KSP version 1.0')
+    return
 
 @cli_db.command('create-user')
 @click.argument('username', type=str)

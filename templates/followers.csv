@@ -1,3 +1,1 @@
-"Date","Delta","Events"
-{% for s in stats %}"{{ s.created }}","{{ s.delta }}","{{ s.events }}"
-{% endfor %}
+Mod,Followers

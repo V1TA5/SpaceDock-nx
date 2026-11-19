@@ -1,0 +1,34 @@
+/* SpaceDock Fonts */
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/glacialindifference-regular-webfont.woff2") format("woff2"),
+       url("/fonts/glacialindifference-regular-webfont.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/glacialindifference-bold-webfont.woff2") format("woff2"),
+       url("/fonts/glacialindifference-bold-webfont.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/glacialindifference-italic-webfont.woff2") format("woff2"),
+       url("/fonts/glacialindifference-italic-webfont.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Moonlight";
+  src: url("/fonts/moon_light-webfont.woff2") format("woff2"),
+       url("/fonts/moon_light-webfont.woff") format("woff");
+  font-display: swap;
+}
+
+
+

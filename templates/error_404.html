@@ -1,17 +1,22 @@
-{% extends "layout.html" %}
-{% block styles %}
-<link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
-{% endblock %}
-{% block body %}
-<div class="error-banner" style="background-image: url('/static/error_404.jpg')">
-    <div class="container">
-        <h4>{{ error.code }} {{ error.name }}</h4>
-        <h3>{{ error.description }}</h3>
-        <p>
-            <a href="/" class="btn btn-primary">Browse Mods</a>
-            <a href="mailto:{{ support_mail }}" class="btn btn-primary">Contact Support</a>
-        </p>
-    </div>
+<!DOCTYPE html>
+<html>
+<head><title>404 - Not Found</title></head>
+<body>
+{% if debug %}
+<h1>404 - Page Not Found</h1>
+<p>{{ error.description if error else 'The page you requested does not exist.' }}</p>
+<div class="error-debug">
+  <h3>Debug Info</h3>
+  <pre>{{ error }}
+Path: {{ request.path }}
+Method: {{ request.method }}
+User-Agent: {{ request.user_agent }}
+Timestamp: {{ now() }}</pre>
 </div>
-<p class="pull-right">Image credit: <a href="https://www.reddit.com/user/Calebm12">/u/Calebm12</a></p>
-{% endblock %}
+{% else %}
+<h1>Page Not Found</h1>
+<p>The page you requested does not exist.</p>
+<a href="/">Back to homepage</a>
+{% endif %}
+</body>
+</html>

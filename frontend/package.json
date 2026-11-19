@@ -1,36 +1,73 @@
 {
-  "name": "spacedock_frontend",
-  "version": "1.0.0",
-  "license": "MIT",
+  "name": "spacedock-frontend",
+  "version": "3.0.0",
   "private": true,
-  "scripts": {
-    "build": "node build.js",
-    "build:tailwind": "tailwindcss -i ./styles/main.scss -o ./build/tailwind.css --minify"
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
   },
-  "devDependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/preset-env": "^7.26.0",
-    "babelify": "^10.0.0",
-    "browserify": "^17.0.0",
-    "coffeeify": "^3.0.1",
-    "coffeescript": "^2.7.0",
-    "node-sass": "^9.0.0",
-    "node-sass-tilde-importer": "^1.0.2",
-    "sass": "^1.77.6",
-    "tailwindcss": "^3.4.17",
-    "postcss": "^8.4.47",
-    "autoprefixer": "^10.4.16"
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "build:analyze": "vite build --analyze",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prettier": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
-    "dropzone": "^6.0.0",
-    "chart.js": "^4.4.0"
+    "@radix-ui/react-avatar": "^1.3.1",
+    "@radix-ui/react-checkbox": "^1.4.1",
+    "@radix-ui/react-dialog": "^1.3.1",
+    "@radix-ui/react-dropdown-menu": "^2.2.1",
+    "@radix-ui/react-popover": "^1.3.1",
+    "@radix-ui/react-select": "^2.4.1",
+    "@radix-ui/react-separator": "^1.2.0",
+    "@radix-ui/react-switch": "^1.4.1",
+    "@radix-ui/react-tooltip": "^1.4.1",
+    "@stylexjs/stylex": "latest",
+    "@tanstack/react-query": "latest",
+    "@tanstack/react-virtual": "latest",
+    "date-fns": "latest",
+    "zod": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router": "latest",
+    "react-router-dom": "^7.18.5"
   },
-  "coffeelintConfig": {
-    "indentation": {
-      "value": 4
-    },
-    "max_line_length": {
-      "level": "ignore"
-    }
+  "devDependencies": {
+    "@axe-core/playwright": "latest",
+    "@eslint/js": "latest",
+    "@playwright/test": "latest",
+    "@stylexjs/eslint-plugin": "latest",
+    "@stylexjs/unplugin": "latest",
+    "@testing-library/dom": "latest",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/user-event": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "eslint": "^9.0.0",
+    "eslint-plugin-jsx-a11y": "latest",
+    "eslint-plugin-react": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "globals": "latest",
+    "jsdom": "latest",
+    "lightningcss": "latest",
+    "prettier": "latest",
+    "rollup-plugin-visualizer": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest",
+    "unplugin": "latest",
+    "vite": "latest",
+    "vitest": "latest",
+    "web-vitals": "latest"
   }
 }

@@ -22,3 +22,13 @@ spacedock-db.bak
 !alembic.ini
 !config.ini
 !Dockerfile
+
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.*
+npm-debug.log*
+Dockerfile*
+docker-compose*
