@@ -1,3 +1,9 @@
+# Grafana stack profiling
+from SpaceDock.profiling import initialize_profiling
+
+initialize_profiling("backend")
+
+# Existing Flask application imports and initialization
 import hashlib
 import hmac
 import json

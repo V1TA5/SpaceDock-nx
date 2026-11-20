@@ -1,14 +1,24 @@
-import random
-from typing import TYPE_CHECKING
 
-from .config import _cfgi
+import os
 
-if TYPE_CHECKING:
-    from wsgiref.types import StartResponse, WSGIEnvironment
+import pyroscope
 
-def sampling_function(environ: "WSGIEnvironment") -> bool:
-    # Don't bother profiling admin pages or static files
-    if environ.get('PATH_INFO', '').startswith(("/admin", "/content", "/static")):
-        return False
-    max = _cfgi('requests-per-profile', 1)
-    return random.randrange(0, max) == 0
+
+def initialize_profiling(service: str):
+    if os.getenv("PYROSCOPE_ENABLED", "true").lower() != "true":
+        return
+
+    pyroscope.configure(
+        application_name=f"spacedock.{service}",
+        server_address=os.getenv(
+            "PYROSCOPE_SERVER_ADDRESS",
+            "http://pyroscope:4040",
+        ),
+        tags={
+            "environment": os.getenv(
+                "DEPLOYMENT_ENV",
+                "development",
+            ),
+            "service": service,
+        },
+    )

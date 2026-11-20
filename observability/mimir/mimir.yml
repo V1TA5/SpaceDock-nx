@@ -1,0 +1,55 @@
+
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+  log_level: info
+
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /data/blocks
+
+blocks_storage:
+  backend: filesystem
+
+  filesystem:
+    dir: /data/blocks
+
+  tsdb:
+    dir: /data/tsdb
+
+  bucket_store:
+    sync_dir: /data/tsdb-sync
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/ruler
+
+compactor:
+  data_dir: /data/compactor
+  sharding_ring:
+    kvstore:
+      store: inmemory
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+ingester:
+  ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+limits:
+  compactor_blocks_retention_period: 168h

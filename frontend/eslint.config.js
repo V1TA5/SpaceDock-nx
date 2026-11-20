@@ -1,3 +1,4 @@
+
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -7,9 +8,18 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['build/', 'node_modules/'],
+    ignores: [
+      'build/**',
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
+
   {
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -17,9 +27,13 @@ export default [
       },
     },
   },
+
   js.configs.recommended,
+
   ...tseslint.configs.recommended,
+
   {
+    files: ['**/*.{jsx,tsx}'],
     settings: {
       react: {
         version: 'detect',
@@ -34,7 +48,9 @@ export default [
       'react/no-unescaped-entities': 'off',
     },
   },
+
   {
+    files: ['**/*.{jsx,tsx}'],
     plugins: {
       'jsx-a11y': jsxA11y,
     },
@@ -45,7 +61,9 @@ export default [
       'jsx-a11y/no-static-element-interactions': 'off',
     },
   },
+
   {
+    files: ['**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooks,
     },
@@ -54,6 +72,5 @@ export default [
       'react-hooks/exhaustive-deps': 'off',
       'react-hooks/set-state-in-effect': 'off',
     },
-    files: ['**/*.ts', '**/*.tsx'],
   },
 ];

@@ -12,9 +12,9 @@ export const colors = stylex.defineVars({
 
   // Backgrounds
   bg: '#ffffff',
-  bgAlt: '#f5f5f5',
+  bgAlt: '#555555',
+  cardInfo: '#f5f5f5',
   surface: '#ffffff',
-  surfaceHover: '#eeeeee',
 
   // Text
   text: '#333333',
@@ -26,16 +26,9 @@ export const colors = stylex.defineVars({
   border: '#e0e0e0',
   borderStrong: '#cccccc',
 
-  // Status
-  error: '#b3182d',
-  success: '#20bb20',
-  info: '#743af3',
-  warning: '#e1cb3f',
+  // Shadows
+  shadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
 });
-
-// ============================================
-// Header
-// ============================================
 
 // Intentionally stays dark in both light and dark mode.
   export const headerColors = stylex.defineVars({
@@ -124,13 +117,14 @@ export const themes = stylex.create({
 
     [colors.primary]: '#07acd2',
     [colors.primaryHover]: '#058aab',
+    [colors.shadow]: '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
 
   dark: {
     [colors.bg]: '#121212',
     [colors.bgAlt]: '#1a1a1a',
+    [colors.cardInfo]: '#101820',
     [colors.surface]: '#202020',
-    [colors.surfaceHover]: '#2a2a2a',
 
     [colors.text]: '#eeeeee',
     [colors.textSecondary]: '#b4b4b4',
@@ -142,5 +136,6 @@ export const themes = stylex.create({
 
     [colors.primary]: '#29bee3',
     [colors.primaryHover]: '#4fc9e8',
+    [colors.shadow]: '0 0 4px rgba(255, 255, 255, 0.05)',
   },
 });

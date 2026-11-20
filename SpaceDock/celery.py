@@ -1,3 +1,9 @@
+# Grafana stack profiling
+from SpaceDock.profiling import initialize_profiling
+
+initialize_profiling("celery")
+
+# Existing Celery initialization
 from datetime import datetime
 from types import FrameType
 from typing import List, Iterable, Any, Optional

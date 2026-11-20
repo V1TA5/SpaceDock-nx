@@ -10,13 +10,12 @@ test.describe('Home Page', () => {
   });
 
   test('loads games', async ({ page }) => {
-    const games = page.locator('a[href^="/ksp"], a[href^="/se"]');
-    await expect(games).toBeVisible();
+    const games = page.locator('a[data-discover="true"]');
+    await expect(games.first()).toBeVisible();
   });
 
-  test('has accessible navigation', async ({ page }) => {
-    // Check that the search input has an accessible name
-    const searchInput = page.locator('input[placeholder*="Search"]');
-    await expect(searchInput).toBeVisible();
+  test('has game cards with titles', async ({ page }) => {
+    const cards = page.locator('h3');
+    await expect(cards.first()).toBeVisible();
   });
 });

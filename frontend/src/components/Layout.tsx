@@ -294,6 +294,8 @@ const styles = stylex.create({
 
   // Sidebar
 
+
+
   sidebar: {
     width: DIMS.sidebarWidth,
     flexShrink: 0,
@@ -302,23 +304,34 @@ const styles = stylex.create({
     backgroundColor: colors.bgAlt,
     color: colors.text,
     borderRight: `1px solid ${colors.border}`,
-    position: 'sticky',
+
+    position: 'fixed',
     top: DIMS.headerHeight,
-    height: `calc(100vh - ${DIMS.headerHeight}px)`,
+    left: 0,
+    bottom: 0,
+    height: `calc(100dvh - ${DIMS.headerHeight}px)`,
+
+    // Scroll only when sidebar content exceeds available height
     overflowY: 'auto',
+    overflowX: 'hidden',
+    overscrollBehavior: 'contain',
+
+    zIndex: 20,
 
     '@media (max-width: 768px)': {
       position: 'fixed',
       top: DIMS.headerHeight,
       left: 0,
       bottom: 0,
-      height: `calc(100vh - ${DIMS.headerHeight}px)`,
+      height: `calc(100dvh - ${DIMS.headerHeight}px)`,
       zIndex: 40,
       transform: 'translateX(-100%)',
       transition: 'transform 0.2s ease',
       boxShadow: '2px 0 8px rgba(0,0,0,0.15)',
     },
   },
+
+
 
   sidebarOpen: {
     '@media (max-width: 768px)': {
@@ -368,13 +381,20 @@ const styles = stylex.create({
 
   // Main content
 
+
   main: {
     flex: 1,
     minWidth: 0,
+    marginLeft: DIMS.sidebarWidth,
     padding: spacing.lg,
     backgroundColor: colors.bg,
     color: colors.text,
+
+    '@media (max-width: 768px)': {
+      marginLeft: 0,
+    },
   },
+
 
   // Footer
 

@@ -1,0 +1,142 @@
+
+// ==========================================
+// PROMETHEUS METRICS -> MIMIR
+// ==========================================
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
+
+// Infrastructure exporters
+prometheus.scrape "infrastructure" {
+  targets = [
+    {
+      __address__ = "postgres-exporter:9187",
+      job         = "postgres",
+    },
+    {
+      __address__ = "redis-exporter:9121",
+      job         = "redis",
+    },
+    {
+      __address__ = "beyla:8999",
+      job         = "beyla",
+    },
+  ]
+
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// Alloy self-monitoring
+prometheus.scrape "alloy" {
+  targets = [
+    {
+      __address__ = "127.0.0.1:12345",
+      job         = "alloy",
+    },
+    {
+    __address__ = "node-exporter:9100",
+    job         = "node",
+    },
+    {
+    __address__ = "cadvisor:8080",
+    job         = "cadvisor",
+    },
+
+  ]
+
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// ==========================================
+// OPENTELEMETRY -> TEMPO
+// ==========================================
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// ==========================================
+// FARO -> LOKI + TEMPO
+// ==========================================
+
+faro.receiver "frontend" {
+  server {
+    listen_address = "0.0.0.0"
+    listen_port = 12347
+
+    cors_allowed_origins = [
+      "http://localhost:5080",
+      "https://localhost:5443",
+      "http://localhost:5173",
+    ]
+  }
+
+  extra_log_labels = {
+    service_name = "spacedock.frontend",
+    environment  = "development",
+  }
+
+  output {
+    logs = [loki.write.default.receiver]
+
+    traces = [
+      otelcol.processor.batch.default.input,
+    ]
+  }
+}
+
+// ==========================================
+// DOCKER CONTAINER LOGS -> LOKI
+// ==========================================
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+
+  targets = discovery.docker.containers.targets
+
+  forward_to = [loki.write.default.receiver]
+}
+
+// ==========================================
+// LOKI
+// ==========================================
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+

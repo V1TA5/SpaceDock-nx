@@ -1,3 +1,4 @@
+import './observability';
 import './index.css';
 import './lib/performance';
 import { createRoot } from 'react-dom/client';
