@@ -1,7 +1,8 @@
 
 // ==========================================
 // SPACEDOCK - GRAFANA ALLOY
-// Grafana Alloy v1.11.0
+// Grafana Alloy v1.22.0
+// Shared development / production observability
 // ==========================================
 
 
@@ -73,7 +74,8 @@ prometheus.scrape "alloy" {
 
 
 // ==========================================
-// BACKEND / OTLP METRICS AND TRACES
+// OTLP RECEIVER
+// BACKEND METRICS AND TRACES
 // ==========================================
 
 otelcol.receiver.otlp "default" {
@@ -164,7 +166,7 @@ otelcol.exporter.otlp "tempo" {
 faro.receiver "frontend" {
   server {
     listen_address = "0.0.0.0"
-    listen_port = 12347
+    listen_port   = 12347
 
     cors_allowed_origins = [
       "http://localhost:5080",

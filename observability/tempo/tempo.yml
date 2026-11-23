@@ -1,7 +1,8 @@
 
 # ==========================================
 # SPACEDOCK - TEMPO CONFIGURATION
-# Grafana Tempo 2.8.0
+# Grafana Tempo 3.1.1
+# Monolithic deployment
 # ==========================================
 
 # ==========================================
@@ -15,7 +16,7 @@ server:
   log_level: info
 
 # ==========================================
-# DISTRIBUTOR
+# DISTRIBUTOR - OTLP RECEIVERS
 # ==========================================
 
 distributor:
@@ -29,18 +30,11 @@ distributor:
           endpoint: 0.0.0.0:4318
 
 # ==========================================
-# INGESTER
+# BACKEND WORKER
+# COMPACTION AND RETENTION
 # ==========================================
 
-ingester:
-  max_block_duration: 5m
-  trace_idle_period: 10s
-
-# ==========================================
-# COMPACTOR
-# ==========================================
-
-compactor:
+backend_worker:
   compaction:
     block_retention: 48h
 
@@ -56,6 +50,7 @@ metrics_generator:
 
   storage:
     path: /var/tempo/generator/wal
+
     remote_write:
       - url: http://mimir:9009/api/v1/push
         send_exemplars: true
@@ -74,7 +69,7 @@ metrics_generator:
         - http.status_code
 
 # ==========================================
-# OVERRIDE DEFAULTS
+# METRICS GENERATOR OVERRIDES
 # ==========================================
 
 overrides:
@@ -85,7 +80,7 @@ overrides:
         - span-metrics
 
 # ==========================================
-# STORAGE
+# TRACE STORAGE
 # ==========================================
 
 storage:
