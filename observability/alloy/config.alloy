@@ -1,5 +1,11 @@
 
 // ==========================================
+// SPACEDOCK - GRAFANA ALLOY
+// Grafana Alloy v1.11.0
+// ==========================================
+
+
+// ==========================================
 // PROMETHEUS METRICS -> MIMIR
 // ==========================================
 
@@ -9,7 +15,11 @@ prometheus.remote_write "mimir" {
   }
 }
 
-// Infrastructure exporters
+
+// ==========================================
+// INFRASTRUCTURE METRICS
+// ==========================================
+
 prometheus.scrape "infrastructure" {
   targets = [
     {
@@ -21,57 +31,120 @@ prometheus.scrape "infrastructure" {
       job         = "redis",
     },
     {
+      __address__ = "node-exporter:9100",
+      job         = "node",
+    },
+    {
+      __address__ = "cadvisor:8080",
+      job         = "cadvisor",
+    },
+    {
       __address__ = "beyla:8999",
       job         = "beyla",
     },
+  ]
 
-  forward_to = [prometheus.remote_write.mimir.receiver]
+  scrape_interval = "15s"
+
+  forward_to = [
+    prometheus.remote_write.mimir.receiver,
+  ]
 }
 
-// Alloy self-monitoring
+
+// ==========================================
+// ALLOY SELF MONITORING
+// ==========================================
+
 prometheus.scrape "alloy" {
   targets = [
     {
       __address__ = "127.0.0.1:12345",
       job         = "alloy",
     },
-    {
-    __address__ = "node-exporter:9100",
-    job         = "node",
-    },
-    {
-      __address__ = "docker-exporter:9324",
-      job         = "docker",
-    },
   ]
 
-  forward_to = [prometheus.remote_write.mimir.receiver]
+  scrape_interval = "15s"
+
+  forward_to = [
+    prometheus.remote_write.mimir.receiver,
+  ]
 }
 
+
 // ==========================================
-// OPENTELEMETRY -> TEMPO
+// BACKEND / OTLP METRICS AND TRACES
 // ==========================================
 
 otelcol.receiver.otlp "default" {
-  grpc {}
-  http {}
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
 
   output {
-    metrics = [otelcol.processor.batch.default.input]
-    traces = [otelcol.processor.batch.default.input]
+    metrics = [
+      otelcol.processor.batch.metrics.input,
+    ]
+
+    traces = [
+      otelcol.processor.batch.traces.input,
+    ]
   }
 }
 
-otelcol.processor.batch "default" {
+
+// ==========================================
+// METRICS PROCESSING
+// ==========================================
+
+otelcol.processor.batch "metrics" {
+  timeout = "5s"
+
+  send_batch_size = 1024
+
   output {
-    metrics = [otelcol.exporter.prometheus.default.input]
-    traces = [otelcol.exporter.otlp.tempo.input]
+    metrics = [
+      otelcol.exporter.prometheus.default.input,
+    ]
   }
 }
+
+
+// ==========================================
+// TRACE PROCESSING
+// ==========================================
+
+otelcol.processor.batch "traces" {
+  timeout = "5s"
+
+  send_batch_size = 1024
+
+  output {
+    traces = [
+      otelcol.exporter.otlp.tempo.input,
+    ]
+  }
+}
+
+
+// ==========================================
+// OTLP METRICS -> MIMIR
+// ==========================================
 
 otelcol.exporter.prometheus "default" {
-  forward_to = [prometheus.remote_write.mimir.receiver]
+  forward_to = [
+    prometheus.remote_write.mimir.receiver,
+  ]
 }
+
+
+// ==========================================
+// OTLP TRACES -> TEMPO
+// ==========================================
 
 otelcol.exporter.otlp "tempo" {
   client {
@@ -83,8 +156,9 @@ otelcol.exporter.otlp "tempo" {
   }
 }
 
+
 // ==========================================
-// FARO -> LOKI + TEMPO
+// FARO FRONTEND TELEMETRY
 // ==========================================
 
 faro.receiver "frontend" {
@@ -105,32 +179,43 @@ faro.receiver "frontend" {
   }
 
   output {
-    logs = [loki.write.default.receiver]
+    logs = [
+      loki.write.default.receiver,
+    ]
 
     traces = [
-      otelcol.processor.batch.default.input,
+      otelcol.processor.batch.traces.input,
     ]
   }
 }
 
+
 // ==========================================
-// DOCKER CONTAINER LOGS -> LOKI
+// DOCKER CONTAINER DISCOVERY
 // ==========================================
 
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
+
+// ==========================================
+// DOCKER CONTAINER LOGS -> LOKI
+// ==========================================
+
 loki.source.docker "containers" {
   host = "unix:///var/run/docker.sock"
 
   targets = discovery.docker.containers.targets
 
-  forward_to = [loki.write.default.receiver]
+  forward_to = [
+    loki.write.default.receiver,
+  ]
 }
 
+
 // ==========================================
-// LOKI
+// LOKI LOG STORAGE
 // ==========================================
 
 loki.write "default" {
@@ -138,4 +223,3 @@ loki.write "default" {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
-

@@ -1,39 +1,111 @@
 
+# ==========================================
+# SPACEDOCK - GRAFANA DATASOURCES
+# Grafana 12.2.0
+# ==========================================
+
 apiVersion: 1
-deleteMissing: false
+
+deleteDatasources: []
 
 datasources:
-  - name: Prometheus
-    uid: prometheus
+
+  # ==========================================
+  # MIMIR - METRICS
+  # ==========================================
+
+  - name: Mimir
+    uid: mimir
     type: prometheus
     access: proxy
     url: http://mimir:9009/prometheus
+
     isDefault: true
     editable: false
+
     jsonData:
       timeInterval: 15s
+      prometheusType: Mimir
+      prometheusVersion: 2.16.0
+      httpMethod: POST
+
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+          urlDisplayLabel: View trace
+
+  # ==========================================
+  # LOKI - LOGS
+  # ==========================================
 
   - name: Loki
     uid: loki
     type: loki
     access: proxy
     url: http://loki:3100
+
     editable: false
+
     jsonData:
       maxLines: 1000
+
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo
+          urlDisplayLabel: View trace
+          url: '$${__value.raw}'
+
+  # ==========================================
+  # TEMPO - TRACES
+  # ==========================================
 
   - name: Tempo
     uid: tempo
     type: tempo
     access: proxy
     url: http://tempo:3200
+
     editable: false
-    jsonData: {}
+
+    jsonData:
+
+      tracesToLogsV2:
+        datasourceUid: loki
+
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+
+        filterByTraceID: true
+        filterBySpanID: false
+        customQuery: false
+
+      tracesToMetrics:
+        datasourceUid: mimir
+
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+
+      nodeGraph:
+        enabled: true
+
+      search:
+        hide: false
+
+      lokiSearch:
+        datasourceUid: loki
+
+  # ==========================================
+  # PYROSCOPE - PROFILING
+  # ==========================================
 
   - name: Pyroscope
     uid: pyroscope
     type: grafana-pyroscope-datasource
     access: proxy
     url: http://pyroscope:4040
+
     editable: false
+
     jsonData: {}

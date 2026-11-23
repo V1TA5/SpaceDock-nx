@@ -1,28 +1,38 @@
 
+# ==========================================
+# SPACEDOCK - OBSERVABILITY STACK
+# Shared development / production services
+# ==========================================
+
 services:
+
   # ==========================================
   # GRAFANA
   # ==========================================
 
   grafana:
-    image: grafana/grafana:12.2.0
+    image: grafana/grafana:13.3.1
+
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
-      GF_PLUGINS_SIG_VALIDATION_ENABLED: "false"
+
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
     ports:
       - "3000:3000"
+
     depends_on:
       - mimir
       - loki
       - tempo
       - pyroscope
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -33,14 +43,18 @@ services:
 
   mimir:
     image: grafana/mimir:2.16.0
+
     command:
       - -target=all
       - -config.file=/etc/mimir/mimir.yml
+
     volumes:
       - ./mimir/mimir.yml:/etc/mimir/mimir.yml:ro
       - mimir-data:/data
+
     ports:
       - "9009:9009"
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -51,13 +65,17 @@ services:
 
   loki:
     image: grafana/loki:3.5.0
+
     command:
       - -config.file=/etc/loki/loki.yml
+
     volumes:
       - ./loki/loki.yml:/etc/loki/loki.yml:ro
       - loki-data:/loki
+
     ports:
       - "3100:3100"
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -68,15 +86,19 @@ services:
 
   tempo:
     image: grafana/tempo:2.8.0
+
     command:
       - -config.file=/etc/tempo/tempo.yml
+
     volumes:
       - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
       - tempo-data:/var/tempo
+
     ports:
       - "3200:3200"
       - "4317:4317"
       - "4318:4318"
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -87,15 +109,18 @@ services:
 
   pyroscope:
     image: grafana/pyroscope:2.2.0
+
     command:
-      - pyroscope
       - server
       - --config.file=/etc/pyroscope/pyroscope-config.yaml
+
     volumes:
       - ./pyroscope/pyroscope-config.yaml:/etc/pyroscope/pyroscope-config.yaml:ro
       - pyroscope-data:/var/lib/pyroscope
+
     ports:
       - "4040:4040"
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -106,56 +131,79 @@ services:
 
   alloy:
     image: grafana/alloy:v1.11.0
+
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
       - /etc/alloy/config.alloy
+
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
     ports:
       - "12345:12345"
       - "4319:4317"
       - "4320:4318"
       - "12347:12347"
+
     depends_on:
       - mimir
       - loki
       - tempo
+
     restart: unless-stopped
     networks:
       - spacedock-net
 
+  # ==========================================
+  # NODE EXPORTER
+  # ==========================================
 
   node-exporter:
     image: prom/node-exporter:v1.9.1
+
     command:
       - --path.rootfs=/host
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+
     volumes:
       - /:/host:ro,rslave
+
     pid: host
+
+    expose:
+      - "9100"
+
     restart: unless-stopped
-    ports:
-      - "9100:9100"
     networks:
       - spacedock-net
+
+  # ==========================================
+  # CADVISOR
+  # ==========================================
+
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+
     privileged: true
+
     command:
-      - --containerd=/run/containerd/containerd.sock
-      - --containerd-namespace=moby
       - --housekeeping_interval=5s
+      - --docker_only=true
       - --enable_metrics=cpu,memory,disk,network
-      - --docker_only
-      - --docker=unix:///var/run/docker.sock
+
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker:/var/lib/docker:ro
-      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /sys:/sys:ro
       - /:/rootfs:ro
-    ports:
-      - "8080:8080"
+      - /var/run:/var/run:ro
+
+    expose:
+      - "8080"
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -166,12 +214,18 @@ services:
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.17.1
+
     environment:
-      DATA_SOURCE_NAME: postgresql://postgres:${POSTGRES_PASSWORD:-spacedock-dev-password}@db:5432/spacedock?sslmode=disable
-    ports:
-      - "9187:9187"
+      DATA_SOURCE_URI: db:5432/spacedock?sslmode=disable
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:-spacedock-dev-password}
+
+    expose:
+      - "9187"
+
     depends_on:
       - db
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -182,43 +236,55 @@ services:
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.75.0
+
     environment:
       REDIS_ADDR: redis://redis:6379
-    ports:
-      - "9121:9121"
+
+    expose:
+      - "9121"
+
     depends_on:
       - redis
+
     restart: unless-stopped
     networks:
       - spacedock-net
 
   # ==========================================
-  # BEYLA - LINUX EBPF
+  # BEYLA - EBPF AUTO-INSTRUMENTATION
   # ==========================================
 
   beyla:
     image: grafana/beyla:latest
+
     profiles:
       - ebpf
+
     pid: "service:backend"
+
     environment:
       BEYLA_OPEN_PORT: "9998"
       BEYLA_SERVICE_NAME: spacedock-api
       BEYLA_PROMETHEUS_PORT: "8999"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+
     cap_add:
       - BPF
       - PERFMON
       - NET_ADMIN
       - SYS_RESOURCE
+
     security_opt:
       - apparmor:unconfined
+
     ports:
       - "8999:8999"
+
     depends_on:
       - backend
       - alloy
+
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -229,17 +295,26 @@ services:
 
   k6:
     image: grafana/k6:latest
+
     profiles:
       - testing
+
     volumes:
-      - ./k6:/scripts:ro
+      - k6:/scripts:ro
+
     command:
       - run
       - /scripts/smoke-test.js
+
     depends_on:
       - backend
+
     networks:
       - spacedock-net
+
+# ==========================================
+# PERSISTENT VOLUMES
+# ==========================================
 
 volumes:
   grafana-data:
@@ -248,6 +323,11 @@ volumes:
   tempo-data:
   pyroscope-data:
 
+# ==========================================
+# NETWORK
+# ==========================================
+
 networks:
   spacedock-net:
+    name: spacedock-net
     driver: bridge

@@ -1,107 +1,253 @@
+
+# ==========================================
+# SPACEDOCK - DEVELOPMENT
+# Root Docker Compose
+# ==========================================
+
+name: spacedock
+
 include:
   - path: ./observability/compose.yml
+
 services:
+
+  # ==========================================
+  # POSTGRESQL
+  # ==========================================
+
   db:
     image: postgres:11
     environment:
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=spacedock
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spacedock-dev-password}
+      POSTGRES_DB: spacedock
+
     volumes:
-      - spacedock-db:/var/lib/postgresql/data${DISABLE_DB_VOLUME}
+      - spacedock-db:/var/lib/postgresql/data
+
     ports:
-      - 0.0.0.0:55432:5432
+      - "0.0.0.0:55432:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spacedock"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+    restart: unless-stopped
     networks:
       - spacedock-net
+
+  # ==========================================
+  # ADMINER
+  # ==========================================
 
   adminer:
     image: adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+
     ports:
-      - 0.0.0.0:8081:8080
+      - "0.0.0.0:8081:8080"
+
+    depends_on:
+      - db
+
+    restart: unless-stopped
     networks:
       - spacedock-net
 
+  # ==========================================
+  # REDIS
+  # ==========================================
+
   redis:
-    image: redis:latest
+    image: redis:7.4-alpine
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
+    volumes:
+      - spacedock-redis:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
     networks:
       - spacedock-net
+
+  # ==========================================
+  # CLAMAV
+  # ==========================================
 
   clamav:
     image: clamav/clamav:latest
+
     volumes:
       - ./storage:/opt/spacedock/storage
+
+    restart: unless-stopped
     networks:
       - spacedock-net
+
+  # ==========================================
+  # BACKEND - FLASK
+  # ==========================================
 
   backend:
     image: spacedock_backend
+
     build:
       context: ./
       target: backend-dev
+
     user: spacedock
+
     environment:
-      - FLASK_APP=SpaceDock.app:app
-      - FLASK_RUN_PORT=9998
-      - FLASK_RUN_HOST=0.0.0.0
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      - SQLALCHEMY_WARN_20=1
-      - CONNECTION_STRING=${CONNECTION_STRING}
-      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
-      - PYROSCOPE_APP_NAME=spacedock.backend
-      - PYROSCOPE_ENABLED=true
+      FLASK_APP: SpaceDock.app:app
+      FLASK_RUN_PORT: "9998"
+      FLASK_RUN_HOST: 0.0.0.0
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+      SQLALCHEMY_WARN_20: "1"
+
+      CONNECTION_STRING: ${CONNECTION_STRING:-postgresql://postgres:spacedock-dev-password@db:5432/spacedock}
+
+      PYROSCOPE_SERVER_ADDRESS: http://pyroscope:4040
+      PYROSCOPE_APP_NAME: spacedock.backend
+      PYROSCOPE_ENABLED: "true"
+
+      OTEL_SERVICE_NAME: spacedock-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+
     command: >
-      sh -c "spacedock database wait && spacedock database initialize --force && spacedock database migrate && spacedock database populate --num-users 50 --mods-per-user-min 0 --mods-per-user-max 5 --versions-per-mod-min 1 --versions-per-mod-max 5 --num-games-min 3 --num-games-max 5 --game-versions-min 2 --game-versions-max 5 --categories-per-game-min 1 --categories-per-game-max 3 --followers-per-mod-min 1 --followers-per-mod-max 5 --num-blog-posts 10 && python3 -W default -m flask run"
+      sh -c "
+        spacedock database wait &&
+        spacedock database initialize --force &&
+        spacedock database migrate &&
+        spacedock database populate
+          --num-users 50
+          --mods-per-user-min 0
+          --mods-per-user-max 5
+          --versions-per-mod-min 1
+          --versions-per-mod-max 5
+          --num-games-min 3
+          --num-games-max 5
+          --game-versions-min 2
+          --game-versions-max 5
+          --categories-per-game-min 1
+          --categories-per-game-max 3
+          --followers-per-mod-min 1
+          --followers-per-mod-max 5
+          --num-blog-posts 10 &&
+        python3 -W default -m flask run
+      "
+
     ports:
-      - 0.0.0.0:9998:9998
+      - "0.0.0.0:9998:9998"
+
     volumes:
       - ./:/opt/spacedock
-    links:
+
+    depends_on:
       - db
+      - redis
       - celery
+      - alloy
+      - pyroscope
+
+    restart: unless-stopped
     networks:
       - spacedock-net
+
+  # ==========================================
+  # CELERY
+  # ==========================================
 
   celery:
     image: spacedock_celery
+
     build:
       context: ./
       target: celery
+
     user: spacedock
+
     environment:
-      - CONNECTION_STRING=${CONNECTION_STRING}
-      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
-      - PYROSCOPE_APP_NAME=spacedock.celery
-      - PYROSCOPE_ENABLED=true
-    command: >
-      celery
-      -A SpaceDock.celery:app
-      worker
-      --loglevel=DEBUG
-      --concurrency=1
-      -B
-    links:
+      CONNECTION_STRING: ${CONNECTION_STRING:-postgresql://postgres:spacedock-dev-password@db:5432/spacedock}
+
+      PYROSCOPE_SERVER_ADDRESS: http://pyroscope:4040
+      PYROSCOPE_APP_NAME: spacedock.celery
+      PYROSCOPE_ENABLED: "true"
+
+      OTEL_SERVICE_NAME: spacedock-celery
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+
+    command:
+      - celery
+      - -A
+      - SpaceDock.celery:app
+      - worker
+      - --loglevel=DEBUG
+      - --concurrency=1
+      - -B
+
+    depends_on:
       - redis
+      - db
+      - alloy
+      - pyroscope
+
+    restart: unless-stopped
     networks:
       - spacedock-net
 
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+
   frontend:
     image: spacedock_frontend
+
     build:
       context: ./frontend
+
     ports:
-      - 0.0.0.0:5080:80
-      - 0.0.0.0:5443:443
-    links:
-      - backend
+      - "0.0.0.0:5080:80"
+      - "0.0.0.0:5443:443"
+
     volumes:
       - ./storage:/var/www/storage
+
+    depends_on:
+      - backend
+
+    restart: unless-stopped
     networks:
       - spacedock-net
+
+# ==========================================
+# NETWORKS
+# ==========================================
 
 networks:
   spacedock-net:
     driver: bridge
 
+# ==========================================
+# VOLUMES
+# ==========================================
+
 volumes:
   spacedock-db:
+  spacedock-redis:
