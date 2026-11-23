@@ -24,7 +24,6 @@ prometheus.scrape "infrastructure" {
       __address__ = "beyla:8999",
       job         = "beyla",
     },
-  ]
 
   forward_to = [prometheus.remote_write.mimir.receiver]
 }
@@ -41,10 +40,9 @@ prometheus.scrape "alloy" {
     job         = "node",
     },
     {
-    __address__ = "cadvisor:8080",
-    job         = "cadvisor",
+      __address__ = "docker-exporter:9324",
+      job         = "docker",
     },
-
   ]
 
   forward_to = [prometheus.remote_write.mimir.receiver]
@@ -55,23 +53,24 @@ prometheus.scrape "alloy" {
 // ==========================================
 
 otelcol.receiver.otlp "default" {
-  grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-
-  http {
-    endpoint = "0.0.0.0:4318"
-  }
+  grpc {}
+  http {}
 
   output {
+    metrics = [otelcol.processor.batch.default.input]
     traces = [otelcol.processor.batch.default.input]
   }
 }
 
 otelcol.processor.batch "default" {
   output {
+    metrics = [otelcol.exporter.prometheus.default.input]
     traces = [otelcol.exporter.otlp.tempo.input]
   }
+}
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
 }
 
 otelcol.exporter.otlp "tempo" {

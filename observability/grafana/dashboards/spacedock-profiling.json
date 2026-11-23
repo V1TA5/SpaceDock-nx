@@ -1,0 +1,150 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Performance profiling for SpaceDock services using Pyroscope",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-pyroscope-datasource",
+        "uid": "pyroscope"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "callTree": {
+          "isLeafNodeEnabled": true,
+          "isModulePathEnabled": true,
+          "isSelfTimeEnabled": true,
+          "isTotalTimeEnabled": true,
+          "isTreeEnabled": true,
+          "rootNode": ""
+        },
+        "flameGraph": {
+          "isCollapsed": false,
+          "isSearchEnabled": true,
+          "isSelfTimeEnabled": true,
+          "isTotalTimeEnabled": true
+        },
+        "mode": "flameGraph"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-pyroscope-datasource",
+            "uid": "pyroscope"
+          },
+          "filters": [
+            {
+              "key": "service.name",
+              "op": "=",
+              "value": "spacedock.backend"
+            }
+          ],
+          "groupBys": [],
+          "legendFormat": "{{service.name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Backend CPU Profile",
+      "type": "flamegraph"
+    },
+    {
+      "datasource": {
+        "type": "grafana-pyroscope-datasource",
+        "uid": "pyroscope"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "callTree": {
+          "isLeafNodeEnabled": true,
+          "isModulePathEnabled": true,
+          "isSelfTimeEnabled": true,
+          "isTotalTimeEnabled": true,
+          "isTreeEnabled": true,
+          "rootNode": ""
+        },
+        "flameGraph": {
+          "isCollapsed": false,
+          "isSearchEnabled": true,
+          "isSelfTimeEnabled": true,
+          "isTotalTimeEnabled": true
+        },
+        "mode": "flameGraph"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-pyroscope-datasource",
+            "uid": "pyroscope"
+          },
+          "filters": [
+            {
+              "key": "service.name",
+              "op": "=",
+              "value": "spacedock.celery"
+            }
+          ],
+          "groupBys": [],
+          "legendFormat": "{{service.name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Celery CPU Profile",
+      "type": "flamegraph"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "spacedock",
+    "profiling"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "SpaceDock Profiling",
+  "uid": "spacedock-profiling",
+  "version": 1,
+  "weekStart": ""
+}

@@ -11,7 +11,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
-      GF_INSTALL_PLUGINS: grafana-pyroscope-datasource
+      GF_PLUGINS_SIG_VALIDATION_ENABLED: "false"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -86,8 +86,13 @@ services:
   # ==========================================
 
   pyroscope:
-    image: grafana/pyroscope:latest
+    image: grafana/pyroscope:2.2.0
+    command:
+      - pyroscope
+      - server
+      - --config.file=/etc/pyroscope/pyroscope-config.yaml
     volumes:
+      - ./pyroscope/pyroscope-config.yaml:/etc/pyroscope/pyroscope-config.yaml:ro
       - pyroscope-data:/var/lib/pyroscope
     ports:
       - "4040:4040"
@@ -130,20 +135,27 @@ services:
       - /:/host:ro,rslave
     pid: host
     restart: unless-stopped
+    ports:
+      - "9100:9100"
     networks:
       - spacedock-net
-
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    image: gcr.io/cadvisor/cadvisor:latest
     privileged: true
-    devices:
-      - /dev/kmsg
+    command:
+      - --containerd=/run/containerd/containerd.sock
+      - --containerd-namespace=moby
+      - --housekeeping_interval=5s
+      - --enable_metrics=cpu,memory,disk,network
+      - --docker_only
+      - --docker=unix:///var/run/docker.sock
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker:/var/lib/docker:ro
-      - /dev/disk:/dev/disk:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /:/rootfs:ro
+    ports:
+      - "8080:8080"
     restart: unless-stopped
     networks:
       - spacedock-net
@@ -193,8 +205,8 @@ services:
       BEYLA_OPEN_PORT: "9998"
       BEYLA_SERVICE_NAME: spacedock-api
       BEYLA_PROMETHEUS_PORT: "8999"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4317
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
     cap_add:
       - BPF
       - PERFMON

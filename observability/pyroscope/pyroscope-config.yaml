@@ -1,0 +1,11 @@
+target: all
+storage:
+  backend: filesystem
+  filesystem:
+    directory: /var/lib/pyroscope
+segment_writer:
+  lifecycler:
+    num_tokens: 128
+    ring:
+      kvstore:
+        store: inmemory

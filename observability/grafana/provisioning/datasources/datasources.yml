@@ -1,5 +1,6 @@
 
 apiVersion: 1
+deleteMissing: false
 
 datasources:
   - name: Prometheus
@@ -27,14 +28,7 @@ datasources:
     access: proxy
     url: http://tempo:3200
     editable: false
-    jsonData:
-      tracesToLogsV2:
-        datasourceUid: loki
-        spanStartTimeShift: "-2m"
-        spanEndTimeShift: "2m"
-        tags:
-          - key: service.name
-            value: service_name
+    jsonData: {}
 
   - name: Pyroscope
     uid: pyroscope
@@ -42,3 +36,4 @@ datasources:
     access: proxy
     url: http://pyroscope:4040
     editable: false
+    jsonData: {}

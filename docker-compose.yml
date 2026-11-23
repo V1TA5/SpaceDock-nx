@@ -17,7 +17,7 @@ services:
   adminer:
     image: adminer
     ports:
-      - 0.0.0.0:8080:8080
+      - 0.0.0.0:8081:8080
     networks:
       - spacedock-net
 
@@ -47,6 +47,9 @@ services:
       - FLASK_DEBUG=1
       - SQLALCHEMY_WARN_20=1
       - CONNECTION_STRING=${CONNECTION_STRING}
+      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
+      - PYROSCOPE_APP_NAME=spacedock.backend
+      - PYROSCOPE_ENABLED=true
     command: >
       sh -c "spacedock database wait && spacedock database initialize --force && spacedock database migrate && spacedock database populate --num-users 50 --mods-per-user-min 0 --mods-per-user-max 5 --versions-per-mod-min 1 --versions-per-mod-max 5 --num-games-min 3 --num-games-max 5 --game-versions-min 2 --game-versions-max 5 --categories-per-game-min 1 --categories-per-game-max 3 --followers-per-mod-min 1 --followers-per-mod-max 5 --num-blog-posts 10 && python3 -W default -m flask run"
     ports:
@@ -67,6 +70,9 @@ services:
     user: spacedock
     environment:
       - CONNECTION_STRING=${CONNECTION_STRING}
+      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
+      - PYROSCOPE_APP_NAME=spacedock.celery
+      - PYROSCOPE_ENABLED=true
     command: >
       celery
       -A SpaceDock.celery:app

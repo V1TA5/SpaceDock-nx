@@ -7,6 +7,7 @@ import pyroscope
 def initialize_profiling(service: str):
     if os.getenv("PYROSCOPE_ENABLED", "true").lower() != "true":
         return
+    print("Initializing Pyroscope profiling...")
 
     pyroscope.configure(
         application_name=f"spacedock.{service}",
